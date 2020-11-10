@@ -1,0 +1,48 @@
+Step1-
+Download stockfish engine(It is open source). 
+
+Step2-
+
+Made a self play program where Stockfish plays against itself and stored the moves.
+
+Step3-
+Convert moves in san(Standard algerbraic notations) so that game can be displayed in chess.com.
+
+Step4-
+
+Assign weights to pieces like 
+white        black
+
+pawn- +1    |  pawn = -1
+bishop- +3  |  bishop = -3
+knight- +3  |  knight = -3
+Queen- +9   |  Queen = -9
+
+Step5-
+
+Given the weights of the pieces make evaluation() function which tells the score of the current position of the board.
+If score>0 --> white is winning
+If score<0 --> black is winning
+
+
+Step6-
+
+Using these scores make minimax tree and predict moves.
+Problem Faced- 
+
+Max depth for fast results is just 1.
+It is super weak engine which has greedy approach.
+We have to do something to better to get more depth and faster results.
+
+Some observations:
+1. For depth=1, time for each move is 0.5s.
+2. For depth=2, time for each move is 55s.
+3. For depth=3, time for each move is 578s.
+
+Time is increasing exponentially with increased depth. 
+
+Step7-
+Apply Alphha-Beta pruning to optimize the algorithm.
+
+For depth = 2, time is reduced to 6.78sec/move.
+
