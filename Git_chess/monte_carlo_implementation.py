@@ -50,18 +50,35 @@ def rollout(curr_node):
 
     return rollout(rnd_state)
 
-def expand(curr_node):
+def expand(curr_node,white):
     if(len(curr_node.children)==0):
         return curr_node
     max_ucb = -inf
-    sel_child = None
-    for i in curr_node.children:
-        tmp = ucb1(i)
-        if(tmp>max_ucb):
-            idx = i
-            max_ucb = tmp
-            sel_child = i
-    return(expand(sel_child))
+    if(white):
+        idx = -1
+        max_ucb = -inf
+        sel_child = None
+        for i in curr_node.children:
+            tmp = ucb1(i)
+            if(tmp>max_ucb):
+                idx = i
+                max_ucb = tmp
+                sel_child = i
+
+        return(expand(sel_child,0))
+
+    else:
+        idx = -1
+        min_ucb = inf
+        sel_child = None
+        for i in curr_node.children:
+            tmp = ucb1(i)
+            if(tmp<min_ucb):
+                idx = i
+                min_ucb = tmp
+                sel_child = i
+
+        return expand(sel_child,1)
 
 def rollback(curr_node,reward):
     curr_node.n+=1
@@ -71,7 +88,7 @@ def rollback(curr_node,reward):
         curr_node = curr_node.parent
     return curr_node
 
-def mcts_pred(curr_node,over,iterations=40):
+def mcts_pred(curr_node,over,white,iterations=10):
     if(over):
         return -1
     all_moves = [curr_node.state.san(i) for i in list(curr_node.state.legal_moves)]
@@ -87,32 +104,58 @@ def mcts_pred(curr_node,over,iterations=40):
         map_state_move[child] = i
         
     while(iterations>0):
-        idx = -1
-        max_ucb = -inf
-        sel_child = None
-        for i in curr_node.children:
-            tmp = ucb1(i)
-            if(tmp>max_ucb):
-                idx = i
-                max_ucb = tmp
-                sel_child = i
-        
-        ex_child = expand(sel_child)
-        
-        reward,state = rollout(ex_child)
+        if(white):
+            idx = -1
+            max_ucb = -inf
+            sel_child = None
+            for i in curr_node.children:
+                tmp = ucb1(i)
+                if(tmp>max_ucb):
+                    idx = i
+                    max_ucb = tmp
+                    sel_child = i
+            ex_child = expand(sel_child,0)
+            reward,state = rollout(ex_child)
+            curr_node = rollback(state,reward)
+            iterations-=1
+        else:
+            idx = -1
+            min_ucb = inf
+            sel_child = None
+            for i in curr_node.children:
+                tmp = ucb1(i)
+                if(tmp<min_ucb):
+                    idx = i
+                    min_ucb = tmp
+                    sel_child = i
 
-        curr_node = rollback(state,reward)
-        iterations-=1
-    
-    mx = -inf
-    idx = -1
-    selected_move = ''
-    for i in (curr_node.children):
-        tmp = ucb1(i)
-        if(tmp>mx):
-            mx = tmp
-            selected_move = map_state_move[i]
-    return selected_move
+            ex_child = expand(sel_child,1)
+
+            reward,state = rollout(ex_child)
+
+            curr_node = rollback(state,reward)
+            iterations-=1
+    if(white):
+        
+        mx = -inf
+        idx = -1
+        selected_move = ''
+        for i in (curr_node.children):
+            tmp = ucb1(i)
+            if(tmp>mx):
+                mx = tmp
+                selected_move = map_state_move[i]
+        return selected_move
+    else:
+        mn = inf
+        idx = -1
+        selected_move = ''
+        for i in (curr_node.children):
+            tmp = ucb1(i)
+            if(tmp<mn):
+                mn = tmp
+                selected_move = map_state_move[i]
+        return selected_move
 
 board = chess.Board()
 engine = chess.engine.SimpleEngine.popen_uci(r'C:\Users\ishaa\Desktop\chess_engine\stockfish-11-win\Windows\stockfish_20011801_x64.exe')
@@ -129,7 +172,7 @@ while((not board.is_game_over())):
     #start = time.time()
     root = node()
     root.state = board
-    result = mcts_pred(root,board.is_game_over())
+    result = mcts_pred(root,board.is_game_over(),white)
     #sm+=(time.time()-start)
     board.push_san(result)
     #print(result)
